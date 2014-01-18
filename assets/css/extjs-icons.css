@@ -1,0 +1,221 @@
+/*
+ * ACTION ICONS
+ */
+
+/** REGULAR SIZE **/
+.extjs-icon-add {
+	background-image: url(../img/icons/add.png)
+}
+
+.extjs-icon-edit {
+	background-image: url(../img/icons/pencil.png)
+}
+
+.extjs-icon-delete {
+	background-image: url(../img/icons/delete.png)
+}
+
+.extjs-icon-restore {
+	background-image: url(../img/icons/arrow_refresh.png)
+}
+
+.extjs-icon-search {
+	background-image: url(../img/icons/find.png)
+}
+
+.extjs-icon-view {
+	background-image: url(../img/icons/magnifier.png)
+}
+
+.extjs-icon-cancel {
+	background-image: url(../img/icons/cancel.png)
+}
+
+.extjs-icon-save {
+	background-image: url(../img/icons/disk.png)
+}
+
+.extjs-icon-money {
+	background-image: url(../img/icons/money.png)
+}
+
+.extjs-icon-print {
+	background-image: url(../img/icons/printer.png)
+}
+
+.extjs-icon-settings {
+	background-image: url(../img/icons/cog.png)
+}
+
+.extjs-icon-arrow-up {
+	background-image: url(../img/icons/arrow_up.png)
+}
+
+.extjs-icon-arrow-down {
+	background-image: url(../img/icons/arrow_down.png)
+}
+
+.extjs-icon-export-excel {
+	background-image: url(../img/icons/export_excel.png)
+}
+
+.extjs-icon-chart {
+	background-image: url(../img/icons/chart_bar.png)
+}
+
+.extjs-icon-movement {
+	background-image: url(../img/icons/arrow_out.png)
+}
+
+.extjs-icon-time {
+	background-image: url(../img/icons/time.png)
+}
+
+.extjs-icon-batch-edit {
+	background-image: url(../img/icons/table_edit.png)
+}
+
+/** LARGE SIZE **/
+.extjs-icon-edit-large {
+	background-image: url(../img/icons/_pencil.png)
+}
+
+.extjs-icon-cancel-large {
+	background-image: url(../img/icons/_cancel.png)
+}
+
+.extjs-icon-save-large {
+	background-image: url(../img/icons/_disk.png)
+}
+
+.extjs-icon-money-large {
+	background-image: url(../img/icons/_money.png)
+}
+
+.extjs-icon-print-large {
+	background-image: url(../img/icons/_printer.png)
+}
+
+/*
+ * MODULE ICONS
+ */
+
+/**********************************
+POINT OF SALE
+**********************************/
+
+/** REGULAR SIZE **/
+.extjs-icon-order-taking {
+	background-image: url(../img/icons/calculator.png)
+}
+
+.extjs-icon-cashiering {
+	background-image: url(../img/icons/cash_register.png)
+}
+
+.extjs-icon-change-order {
+	background-image: url(../img/icons/calculator_edit.png)
+}
+
+.extjs-icon-history {
+	background-image: url(../img/icons/clock_history_frame.png)
+}
+
+.extjs-icon-credit {
+	background-image: url(../img/icons/credit.png)
+}
+
+.extjs-icon-credit-payment {
+	background-image: url(../img/icons/table_money.png)
+}
+
+/** LARGE SIZE **/
+.extjs-icon-cashiering-large {
+	background-image: url(../img/icons/_cash_register.png)
+}
+
+.extjs-icon-history-large {
+	background-image: url(../img/icons/_clock_history_frame.png)
+}
+
+
+/**********************************
+MANAGE
+**********************************/
+
+.extjs-icon-user-groups-permissions {
+	background-image: url(../img/icons/group.png)
+}
+
+.extjs-icon-employees {
+	background-image: url(../img/icons/user.png)
+}
+
+.extjs-icon-suppliers {
+	background-image: url(../img/icons/tractor.png)
+}
+
+.extjs-icon-categories {
+	background-image: url(../img/icons/categories.png)
+}
+
+.extjs-icon-units {
+	background-image: url(../img/icons/weight.png)
+}
+
+.extjs-icon-items {
+	background-image: url(../img/icons/bricks.png)
+}
+
+.extjs-icon-module-menu-groups {
+	background-image: url(../img/icons/menu.png)
+}
+
+.extjs-icon-module-menu-items {
+	background-image: url(../img/icons/menu_item.png)
+}
+
+
+/**********************************
+PURCHASING
+**********************************/
+
+/** REGULAR SIZE **/
+.extjs-icon-receive-items {
+	background-image: url(../img/icons/inbox_download.png)
+}
+
+.extjs-icon-return-items {
+	background-image: url(../img/icons/inbox_upload.png)
+}
+
+.extjs-icon-purchase-order {
+	background-image: url(../img/icons/text_list_numbers.png)
+}
+
+/** LARGE SIZE **/
+.extjs-icon-receive-items-large {
+	background-image: url(../img/icons/_inbox_download.png)
+}
+
+
+/**********************************
+SETTINGS
+**********************************/
+
+/** REGULAR SIZE **/
+.extjs-icon-store-information {
+	background-image: url(../img/icons/information.png)
+}
+
+
+/**********************************
+SUPER ADMIN
+**********************************/
+.extjs-icon-module-menu-group {
+	background-image: url(../img/icons/menu.png)
+}
+
+.extjs-icon-module-menu-item {
+	background-image: url(../img/icons/menu_item.png)
+}

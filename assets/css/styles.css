@@ -1,0 +1,52 @@
+html, body {
+	background: #f5f5f5 !important;
+	-webkit-user-select:none;
+    -moz-user-select:none;
+}
+
+#main-container {
+	margin-top: 60px;
+}
+
+#sidebar-container {
+	
+}
+
+.lead-no-mb {
+	margin-bottom: 0 !important;
+	height: 40px !important;
+}
+
+.lead-small {
+	margin-bottom: 10px;
+	font-size: 16px;
+}
+
+.lead-small-no-mb {
+	margin-bottom: 0 !important;
+	height: 30px !important;
+}
+
+.x-tool .x-tool-img {
+	vertical-align: top;
+}
+
+/*
+ * EXTJS STYLE CLASSES
+ */
+
+.extjs-bold-text {
+	font-weight: bold;
+}
+
+.extjs-align-right {
+	text-align: right;
+}
+
+.extjs-align-center {
+	text-align: center;
+}
+
+.extjs-td-success {
+	background-color: #dff0d8;
+}
