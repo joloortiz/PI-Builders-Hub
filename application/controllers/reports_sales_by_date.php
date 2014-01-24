@@ -10,8 +10,8 @@ class Reports_sales_by_date extends MY_Controller {
 		);
 		$this->smarty->assign('page_js', $page_js);
 
-        $this->smarty->assign('page', 'Sales by Date');
-        $this->smarty->assign('controller', 'reports_sales_by_date');
+		$this->smarty->assign('page', 'Sales by Date');
+		$this->smarty->assign('controller', 'reports_sales_by_date');
 		$this->smarty->assign('layout', 'default_layout.tpl');
 		$this->smarty->view('pages/grid_container.tpl');
 	}
@@ -44,13 +44,14 @@ class Reports_sales_by_date extends MY_Controller {
 					'date' => date('Y-m-d', strtotime($start_time))
 				);
 			}
+
 			$data['data'] = $sales_data;
 		} catch(Exception $e) {
 			$data['success'] = false;
 			$data['msg'] = $e->getMessage();
-        }
+		}
 
-		echo json_encode($data);		
+		echo json_encode($data);
 	}
 
 	# Export Items for Reordering
@@ -60,7 +61,7 @@ class Reports_sales_by_date extends MY_Controller {
 
 		try {
 			// Set Default Timezone
-            date_default_timezone_set('Asia/Manila');
+			date_default_timezone_set('Asia/Manila');
 
 			$sales_data = array();
 			$datefrom_time = strtotime($datefrom);
@@ -113,7 +114,7 @@ class Reports_sales_by_date extends MY_Controller {
 		} catch(Exception $e) {
 			$data['success'] = false;
 			$data['msg'] = $e->getMessage();
-        }
+		}
 
 		echo json_encode($data);
 	}
@@ -123,14 +124,14 @@ class Reports_sales_by_date extends MY_Controller {
 		$filename = mysql_real_escape_string($this->input->get('filename'));
 
 		header('Content-Encoding: UTF-8');
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/force-download; charset=UTF-8');
-        header('Content-Disposition: attachment; filename=' . $filename);
-        header('Cache-Control: max-age=0');
-        flush();
-        readfile(FILES_DIR . $filename);
-        sleep(3);
-        unlink(FILES_DIR . $filename);
-        exit;
+		header('Content-Description: File Transfer');
+		header('Content-Type: application/force-download; charset=UTF-8');
+		header('Content-Disposition: attachment; filename=' . $filename);
+		header('Cache-Control: max-age=0');
+		flush();
+		readfile(FILES_DIR . $filename);
+		sleep(3);
+		unlink(FILES_DIR . $filename);
+		exit;
 	}
 }

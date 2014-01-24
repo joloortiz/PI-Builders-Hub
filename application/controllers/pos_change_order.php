@@ -73,14 +73,15 @@ class Pos_change_order extends MY_Controller {
 
 	# Get Items
 	function get_items() {
-		// $query = trim(mysql_real_escape_string($this->input->get('query')));
+		$query = trim(mysql_real_escape_string($this->input->get('query')));
 		$c_id = strtolower($this->input->post('c_id'));
 
 		try {
 			// Get Data
-			$data['data'] = $this->items_model->get_items('', '', '', false, $c_id);
+			$data['data'] = $this->items_model->get_items($query, '', '', false, $c_id);
 			foreach($data['data'] as $k => $v) {
-				$data['data'][$k]['display_name'] = $v['i_name'] . '-' . $v['i_attribute'] . '(' . $v['u_slug_name'] . ')';
+				$data['data'][$k]['i_name'] = stripslashes($data['data'][$k]['i_name']);
+				$data['data'][$k]['display_name'] = stripslashes($v['i_name'] . '-' . $v['i_attribute'] . '(' . $v['u_slug_name'] . ')');
 			}
 
 			$data['success'] = true;
@@ -109,6 +110,32 @@ class Pos_change_order extends MY_Controller {
 			$data['success'] = false;
 			$data['msg'] = $e->getMessage();
         }
+
+		echo json_encode($data);
+	}
+
+	# Get Changed Order Items
+	function get_change_order_items() {
+		$o_id = $this->input->post('o_id');
+
+		try {
+			// Get Change Order
+			$change_order = $this->orders_model->get_change_order_by_order_id($o_id);
+			$data['change_order'] = $change_order[0];
+
+			// Get Change Order Items
+			$change_order_items = $this->orders_model->get_change_order_items_by_change_order_id($change_order[0]['co_id']);
+			$data['change_order_items'] = $change_order_items;
+
+			// Get Store Information
+			$store_information = $this->store_information_model->get_store_information();
+			$data['store_information'] = $store_information[0];
+			
+			$data['success'] = true;
+		} catch(Exception $e) {
+			$data['success'] = false;
+			$data['msg'] = $e->getMessage();
+		}
 
 		echo json_encode($data);
 	}
@@ -159,6 +186,18 @@ class Pos_change_order extends MY_Controller {
 				);
 				$this->orders_model->Insert_change_order_details($insert_change_order_details_data);	
 			}
+
+			// Get Change Order
+			$change_order = $this->orders_model->get_change_order_by_id($co_id);
+			$data['change_order'] = $change_order[0];
+
+			// Get Change Order Items
+			$change_order_items = $this->orders_model->get_change_order_items_by_change_order_id($co_id);
+			$data['change_order_items'] = $change_order_items;
+
+			// Get Store Information
+			$store_information = $this->store_information_model->get_store_information();
+			$data['store_information'] = $store_information[0];
 
 			$data['success'] = true;
 		} catch(Exception $e) {

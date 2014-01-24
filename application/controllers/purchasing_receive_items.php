@@ -127,22 +127,6 @@ class Purchasing_receive_items extends MY_Controller {
 		echo json_encode($data);
 	}
 
-	# Get Store Information
-	function get_store_information() {
-		try {
-			// Get Data
-			$store_information = $this->store_information_model->get_store_information();
-			$data['data'] = $store_information[0];
-
-			$data['success'] = true;
-		} catch(Exception $e) {
-			$data['success'] = false;
-			$data['msg'] = $e->getMessage();
-        }
-
-		echo json_encode($data);
-	}
-
 	# Get Purchase Orders
 	function get_purchase_orders() {
 		try {
@@ -229,6 +213,10 @@ class Purchasing_receive_items extends MY_Controller {
 			// Get Receiving
 			$receiving = $this->purchasing_model->get_receiving_by_id($r_id);
 			$data['receiving'] = $receiving[0];
+
+			// Get Store Information
+			$store_information = $this->store_information_model->get_store_information();
+			$data['store_information'] = $store_information[0];
 
 			$data['success'] = true;
 		} catch(Exception $e) {

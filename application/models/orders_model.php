@@ -76,6 +76,58 @@ class Orders_model extends CI_Model {
 		return $query->result_array();
 	}
 
+	# Get Change Order By Order Id
+	function get_change_order_by_order_id($o_id) {
+		// Select
+		$this->db->select('
+			co.*,
+			CONCAT(e.e_fname, \' \', e.e_lname) AS attended_name
+		', FALSE);
+		$this->db->from('change_orders co');
+		$this->db->join('employees e', 'co.co_attended_by = e.e_id', 'left');
+
+		// Options
+		$this->db->where('co.o_id', $o_id);
+
+		// Get Data
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+
+	# Get Change Order By Id
+	function get_change_order_by_id($co_id) {
+		// Select
+		$this->db->select('
+			co.*,
+			CONCAT(e.e_fname, \' \', e.e_lname) AS attended_name
+		', FALSE);
+		$this->db->from('change_orders co');
+		$this->db->join('employees e', 'co.co_attended_by = e.e_id', 'left');
+
+		// Options
+		$this->db->where('co.co_id', $co_id);
+
+		// Get Data
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+
+	# Get Change Order Items By Change Order Id
+	function get_change_order_items_by_change_order_id($co_id) {
+		// Select
+		$this->db->select('cod.*, i.i_name, i.i_attribute, u.u_id, u.u_name, u.u_slug_name');
+		$this->db->from('change_order_details cod');
+		$this->db->join('items i', 'cod.i_id = i.i_id', 'left');
+		$this->db->join('units u', 'i.u_id = u.u_id', 'left');
+
+		// Options
+		$this->db->where('cod.co_id', $co_id);
+
+		// Get Data
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+
 	# Get Credits
 	function get_credits($query='', $start='', $limit='', $status='') {
 		// Select

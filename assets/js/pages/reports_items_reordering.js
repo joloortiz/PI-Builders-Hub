@@ -57,7 +57,7 @@ Ext.onReady(function() {
 	    listeners: {
 	    	load: function() {
 	    		Ext.getCmp('frm_sel_supplier').setValue('all');
-	    		store.reload();
+	    		// store.reload();
 	    	}
 	    }
 	});
@@ -81,7 +81,7 @@ Ext.onReady(function() {
             value: 'All',
             listeners: {
             	select: function() {
-            		store.reload();
+            		// store.reload();
             	}
             }
         },
@@ -102,7 +102,7 @@ Ext.onReady(function() {
             forceSelection: true,
             listeners: {
             	select: function() {
-            		store.reload();
+            		// store.reload();
             	}
             }
         },

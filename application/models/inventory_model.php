@@ -51,6 +51,22 @@ class Inventory_model extends CI_Model {
 		return $query->result_array();
 	}
 
+	# Get Adjustment Items By Adjustment Id
+	function get_adjustment_items_by_adjustment_id($a_id) {
+		// Select
+		$this->db->select('ad.*, i.i_name, i.i_attribute, u.u_id, u.u_name, u.u_slug_name');
+		$this->db->from('adjustment_details ad');
+		$this->db->join('items i', 'ad.i_id = i.i_id', 'left');
+		$this->db->join('units u', 'i.u_id = u.u_id', 'left');
+
+		// Options
+		$this->db->where('ad.a_id', $a_id);
+
+		// Get Data
+		$query = $this->db->get();
+		return $query->result_array();
+	}
+
 	# Insert Adjustment
 	function Insert_adjustment($data) {
 		$this->db->set('a_adjustment_number', '(SELECT r_get_adjustment_number())', FALSE);

@@ -7,37 +7,79 @@ class Reports_model extends CI_Model {
 		$sql = "
 			SELECT
 			IFNULL (
-				-- (POSTIVE) Total Sales minus Total Discounts on Date(s) specified --
 				(
 					SELECT
-						(
-							-- (POSITIVE) Selling Price times Qty --
-							IFNULL(
-								SUM(od.od_selling_price * od.od_qty),
-								0
-							)
-							+
-							-- (NEGATIVE) Discount times Qty --
-							(
-								IFNULL(
-									SUM(od.od_discount * od.od_qty),
-									0
-								) * (-1)
-							)
-						) AS sales
+					    (
+					        IFNULL(
+					            SUM(od.od_selling_price * od.od_qty),
+					            0
+					        )
+					        +
+					        (
+					            IFNULL(
+					                SUM(od.od_discount * od.od_qty),
+					                0
+					            )
+					            *
+					            (-1)
+					        )
+					        +
+					        IFNULL(
+					            (
+					                SELECT 
+					                    SUM(cod.cod_selling_price * cod.cod_qty) - SUM(cod.cod_selling_price * cod.cod_discount)
+					                FROM
+					                    change_orders co
+					                LEFT JOIN
+					                    change_order_details cod ON co.co_id = cod.co_id
+					                WHERE
+					                    co.o_id IN (
+					                        SELECT o_id 
+					                        FROM orders 
+					                        WHERE 
+					                            o.o_status = 'P'
+					                            AND o.o_date BETWEEN '$datefrom' AND '$dateto'
+					                    )
+					                    AND cod.cod_type = 'N'
+					            ),
+					            0
+					        )
+					        +
+					        (
+					            IFNULL(
+					                (
+					                    SELECT 
+					                        SUM(cod.cod_selling_price * cod.cod_qty) - SUM(cod.cod_selling_price * cod.cod_discount)
+					                    FROM
+					                        change_orders co
+					                    LEFT JOIN
+					                        change_order_details cod ON co.co_id = cod.co_id
+					                    WHERE
+					                        co.o_id IN (
+					                            SELECT o_id 
+					                            FROM orders 
+					                            WHERE 
+					                                o.o_status = 'P'
+					                                AND o.o_date BETWEEN '$datefrom' AND '$dateto'
+					                        )
+					                        AND cod.cod_type = 'O'
+					                ),
+					                0
+					            )
+					            *
+					            (-1)
+					        )
+					    ) AS sales
 					FROM
-						orders o
+					    orders o
 					LEFT JOIN
-						order_details od ON o.o_id = od.o_id
+					    order_details od ON o.o_id = od.o_id
 					WHERE
-						o.o_status = 'P'
-						AND o.o_amount_tendered >= (SELECT SUM(od_selling_price * od_qty) - SUM(od_discount * od_qty) FROM order_details WHERE o_id = o.o_id) 
-						AND o.o_date BETWEEN '$datefrom' AND '$dateto'
+					    o.o_status = 'P'
+					    AND o.o_amount_tendered >= (SELECT SUM(od_selling_price * od_qty) - SUM(od_discount * od_qty) FROM order_details WHERE o_id = o.o_id) 
+					    AND o.o_date BETWEEN '$datefrom' AND '$dateto'
 				)
-
 				+
-
-				-- (POSTIVE) Total Credit Payments on Date(s) specified --
 				IFNULL(
 					(
 						SELECT SUM(crp_amount_payed) AS amount_payed
@@ -48,57 +90,9 @@ class Reports_model extends CI_Model {
 						LEFT JOIN
 						    orders o ON cr.o_id = o.o_id
 						WHERE
-							o.o_status = 'P'
-							AND crp.crp_date BETWEEN '$datefrom' AND '$dateto'
+						    o.o_status = 'P'
+						    AND crp.crp_date BETWEEN '$datefrom' AND '$dateto'
 					),
-					0
-				)
-
-				+
-
-				-- (POSTIVE) Total Sales of Change Order Item(s) that is used for Replacing on Date(s) specified --
-				IFNULL(
-					(
-						SELECT 
-							SUM(cod.cod_selling_price * cod.cod_qty) - SUM(cod.cod_selling_price * cod.cod_discount)
-						FROM
-							change_orders co
-						LEFT JOIN
-							change_order_details cod ON co.co_id = cod.co_id
-						WHERE
-							co.o_id IN (
-								SELECT o_id 
-								FROM orders 
-								WHERE 
-									o_status = 'P'
-							)
-							AND co.co_date BETWEEN '$datefrom' AND '$dateto'
-							AND cod.cod_type = 'N'
-					),
-					0
-				)
-
-				+
-				
-				-- (NEGATIVE) Total Sales of Change Order Item(s) that is for Changing on Date(s) specified --
-				IFNULL(
-					(
-						SELECT 
-							SUM(cod.cod_selling_price * cod.cod_qty) - SUM(cod.cod_selling_price * cod.cod_discount)
-						FROM
-							change_orders co
-						LEFT JOIN
-							change_order_details cod ON co.co_id = cod.co_id
-						WHERE
-							co.o_id IN (
-								SELECT o_id 
-								FROM orders 
-								WHERE 
-									o_status = 'P'
-							)
-							AND co.co_date BETWEEN '$datefrom' AND '$dateto'
-							AND cod.cod_type = 'O'
-					) * (-1),
 					0
 				),
 				0
@@ -132,7 +126,6 @@ class Reports_model extends CI_Model {
 			$this->db->where('i.s_id', $s_id);
 		}
 		$this->db->where('v_items.qty_on_hand <= i.i_reorder_level', NULL, FALSE);
-		$this->db->where('i.is_deleted', FALSE);
 		$this->db->order_by('v_items.qty_on_hand', 'asc');
 		$this->db->order_by('i.i_name', 'asc');
 
@@ -240,8 +233,6 @@ class Reports_model extends CI_Model {
 					units u ON i.u_id = u.u_id
 				LEFT JOIN
 					suppliers s ON i.s_id = s.s_id
-				WHERE
-					i.is_deleted = FALSE
 			)a
 			WHERE
 			    item_movement >= $qtyfrom

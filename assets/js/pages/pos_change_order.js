@@ -71,6 +71,40 @@ Ext.onReady(function() {
 		// pageSize: global_page_size
 	});
 
+	var item_search_store = new Ext.data.Store({
+		fields: [
+			{name: 'item_id', mapping: 'i_id'},
+			{name: 'item_name', mapping: 'i_name'},
+			{name: 'item_display_name', mapping: 'display_name'},
+			{name: 'item_attribute', mapping: 'i_attribute'},
+			{name: 'item_selling_price', mapping: 'i_selling_price'},
+			{name: 'item_purchase_price', mapping: 'i_purchase_price'},
+			{name: 'item_vat', mapping: 'i_vat'},
+			{name: 'category_id', mapping: 'c_id'},
+			{name: 'category_name', mapping: 'c_name'},
+			{name: 'unit_id', mapping: 'u_id'},
+			{name: 'unit_name', mapping: 'u_name'},
+			{name: 'unit_slug_name', mapping: 'u_slug_name'},
+			{name: 'supplier_id', mapping: 's_id'},
+			{name: 'supplier_name', mapping: 's_name'},
+			{name: 'item_reorder_level', mapping: 'i_reorder_level', type: data_types.FLOAT},
+			{name: 'qty_on_hand', mapping: 'qty_on_hand', type: data_types.FLOAT}
+		],
+		proxy: {
+			type: 'ajax',
+			url: global_controller_url + 'get_items',
+			reader: {
+				type: 'json',
+				root: 'data'
+			}
+		},
+		listeners: {
+			beforeload: function(me) {
+				me.getProxy().extraParams.query = Ext.getCmp('frm_item_search').getValue().trim();
+			}
+		}
+	});
+
 	var category_store = new Ext.data.Store({
 		fields: ['c_id', 'c_name'],
 		proxy: {
@@ -129,6 +163,27 @@ Ext.onReady(function() {
 			handler: function() {
 				if(grid.getSelectionModel().hasSelection()) {
 					Change_order_initialize();
+				} else {
+					Ext.Msg.show({
+						title:'Information',
+						msg: 'Please a record first',
+						buttons: Ext.Msg.OK,
+						icon: Ext.Msg.WARNING,
+						closable: false
+					});
+				}
+			}
+		},
+		'-',
+		{
+			xtype: 'button',
+			text: 'View Change Order',
+			id: 'btn_view',
+			iconCls: 'extjs-icon-view',
+			iconAlign: 'left',
+			handler: function() {
+				if(grid.getSelectionModel().hasSelection()) {
+					View();
 				} else {
 					Ext.Msg.show({
 						title:'Information',
@@ -213,7 +268,7 @@ Ext.onReady(function() {
 			emptyText: 'Select Item',
 			hideLabel: true,
 			forceSelection: true,
-			width: '70%',
+			width: '50%',
 			// pageSize: global_page_size,
 			listConfig: {
 				emptyText: 'No Items found.',
@@ -272,6 +327,45 @@ Ext.onReady(function() {
 			// 	this.store.filter(this.displayField, new RegExp(Ext.String.escapeRegex(queryString), 'i'));
 			// 	console.log(this.store.count(), queryString);
 			// }
+		},
+		'->',
+		{
+			xtype: 'button',
+			text: 'Item Search',
+			iconCls: 'extjs-icon-search',
+			handler: function() {
+				Item_search();
+			}
+		}
+	];
+
+	var item_search_top_bar = [
+		{
+			xtype: 'textfield',
+			id: 'frm_item_search',
+			name: 'frm_item_search',
+			emptyText: 'Search Item then Press Enter',
+			hideLabel: true,
+			width: '100%',
+			listeners: {
+				specialkey: function(me, e) {
+					if(e.keyCode == 13) { // Enter
+						// Trim
+						me.setValue(me.getValue().trim());
+
+						if(me.getValue() != '') {
+							item_search_grid.getStore().reload();
+						}
+					}
+
+					if(e.keyCode == 40) { // Down Arrow
+						if(item_search_grid.getStore().count() > 0) {
+							item_search_grid.getSelectionModel().select(0);
+							item_search_grid.getView().getEl().scrollTo('top', 0, true);
+						}
+					}
+				}
+			}
 		}
 	];
 
@@ -410,12 +504,14 @@ Ext.onReady(function() {
 		    		var data = selected.getData();
 		    		if(data.changed_order == '0') {
 		    			Ext.getCmp('btn_change').enable();
+		    			Ext.getCmp('btn_view').disable();
 		    			
 		    			if(parseFloat(data.o_amount_tendered) < parseFloat(data.total)) {
 		    				Ext.getCmp('btn_change').disable();
 		    			}
 		    		} else {
 		    			Ext.getCmp('btn_change').disable();
+		    			Ext.getCmp('btn_view').enable();
 		    		}
 	    		}
 	    	}
@@ -455,6 +551,14 @@ Ext.onReady(function() {
 	            width: 50,
 	            dataIndex: 'od_qty',
 	            renderer: renderer_number
+	        },
+	        {
+	            text: 'Price',
+	            width: 100,
+	            dataIndex: 'od_selling_price',
+	            align: 'right',
+	            tdCls: 'extjs-bold-text text-success',
+	            renderer: renderer_currency
 	        },
 	        {
 	            text: 'Subtotal',
@@ -516,16 +620,14 @@ Ext.onReady(function() {
 	            tdCls: 'extjs-bold-text',
 	            renderer: renderer_to_upper,
 	            sortable: false,
-	            draggable: false,
-	            locked: true
+	            draggable: false
 	        },
 	        {
 	            text: 'Category',
 	            width: 120,
 	            dataIndex: 'c_name',
 	            sortable: false,
-	            draggable: false,
-	            locked: true
+	            draggable: false
 	        },
 	        {
 	            text: 'Subtotal',
@@ -535,8 +637,7 @@ Ext.onReady(function() {
 	            tdCls: 'extjs-bold-text text-info',
 	            renderer: renderer_currency,
 	            sortable: false,
-	            draggable: false,
-	            locked: true
+	            draggable: false
 	        },
 	        {
 	            text: 'Qty',
@@ -545,8 +646,7 @@ Ext.onReady(function() {
 	            align: 'center',
 	            renderer: renderer_number,
 	            sortable: false,
-	            draggable: false,
-	            locked: true
+	            draggable: false
 	        },
 	        {
 	            text: 'Attribute',
@@ -593,6 +693,79 @@ Ext.onReady(function() {
 	            draggable: false
 	        }
 	    ]
+	});
+
+	var item_search_grid = new Ext.grid.Panel({
+		store: item_search_store,
+		columnLines: true,
+		tbar: item_search_top_bar,
+		columns: [
+			{
+	            text: 'Item Name',
+	            width: 300,
+	            dataIndex: 'item_name',
+	            tdCls: 'extjs-bold-text',
+	            renderer: renderer_to_upper,
+	            sortable: false,
+	            draggable: false,
+	            locked: true
+	        },
+	        {
+	            text: 'Attribute',
+	            width: 100,
+	            dataIndex: 'item_attribute',
+	            sortable: false,
+	            draggable: false
+	        },
+	        {
+	            text: 'Selling Price',
+	            width: 120,
+	            dataIndex: 'item_selling_price',
+	            align: 'right',
+	            tdCls: 'extjs-bold-text text-success',
+	            renderer: renderer_currency,
+	            sortable: false,
+	            draggable: false
+	        },
+	        {
+	            text: 'Purchase Price',
+	            width: 120,
+	            dataIndex: 'item_purchase_price',
+	            align: 'right',
+	            renderer: renderer_currency,
+	            sortable: false,
+	            draggable: false
+	        },
+	        {
+	            text: 'VAT',
+	            width: 60,
+	            dataIndex: 'item_vat',
+	            align: 'center',
+	            renderer: renderer_yes_no_negative
+	        },
+	        {
+	            text: 'Category',
+	            width: 120,
+	            dataIndex: 'category_name'
+	        },
+	        {
+	            text: 'Supplier',
+	            width: 120,
+	            dataIndex: 'supplier_name'
+	        }
+		],
+		listeners:{
+			cellkeydown: function(me, td, cell_index, record, tr, row, e){
+				if(e.keyCode == 13) { // Enter
+					Add_item(record);
+					me.focus();
+				}
+			},
+			itemdblclick: function(me, record) {
+				Add_item(record);
+				me.focus();
+			}
+		}
 	});
 
 	// Set Form Panel
@@ -654,10 +827,18 @@ Ext.onReady(function() {
 	    ]
     });
 
+	// Set Tab Panel
+	var view_change_order_tab_panel = new Ext.tab.Panel({
+		width: '100%',
+		activeTab: 0,
+		plain: true,
+		deferredRender: false
+	});
+
 	// Set Window panel
 	var window_panel = new Ext.window.Window({
 		height: 500,
-		width: 1200,
+		width: 1000,
 		iconCls: 'extjs-icon-edit',
 		closeAction: 'hide',
 		layout: 'fit',
@@ -679,7 +860,7 @@ Ext.onReady(function() {
 				items: [
 					{
 						title: 'Ordered Items',
-						width: 500,
+						width: 400,
 						layout: 'fit',
 						padding: '0 5 0 0',
 						items: [ordered_items_grid]
@@ -711,7 +892,16 @@ Ext.onReady(function() {
 				iconCls: 'extjs-icon-edit-large',
 				scale: 'large',
 				handler: function() {
-					Change();
+					Change(false);
+				}
+			},
+			{
+				xtype: 'button',
+				text: 'Print & Change',
+				iconCls: 'extjs-icon-print-large',
+				scale: 'large',
+				handler: function() {
+					Change(true);
 				}
 			}
 		],
@@ -722,6 +912,42 @@ Ext.onReady(function() {
 	    		Update_total();
 	    	}
 	    }
+	});
+
+	var view_change_order_window_panel = new Ext.window.Window({
+		height: 500,
+		width: 750,
+		bodyPadding: 5,
+		iconCls: 'extjs-icon-view',
+		layout: 'fit',
+		closeAction: 'hide',
+		modal: true,
+		resizable: false,
+		closable: false,
+		maximizable: true,
+		items: [view_change_order_tab_panel],
+		bbar: [
+			{
+				xtype: 'button',
+				text: 'Close',
+				iconCls: 'extjs-icon-cancel-large',
+				scale: 'large',
+				handler: function() {
+					view_change_order_window_panel.close();
+				}
+			},
+			'->',
+			{
+				xtype: 'button',
+				id: 'btn_print',
+				text: 'Print',
+				iconCls: 'extjs-icon-print-large',
+				scale: 'large',
+				handler: function() {
+					Print_contents()
+				}
+			}
+		]
 	});
 
 	var qty_discount_window_panel = new Ext.window.Window({
@@ -735,6 +961,37 @@ Ext.onReady(function() {
 		closable: false,
 		resizable: false,
 		items: [qty_discount_form_panel]
+	});
+
+	var item_search_window_panel = new Ext.window.Window({
+		title: 'Item Search',
+		height: 500,
+		width: 750,
+		bodyPadding: 5,
+		iconCls: 'extjs-icon-search',
+		layout: 'fit',
+		closeAction: 'hide',
+		modal: true,
+		resizable: false,
+		closable: false,
+		dockedItems: [
+			{
+				xtype: 'toolbar',
+				dock: 'bottom',
+				items: [
+					{
+						xtype: 'button',
+						text: 'Close',
+						iconCls: 'extjs-icon-cancel-large',
+						scale: 'large',
+						handler: function() {
+							item_search_window_panel.close();
+						}
+					}
+				]
+			}
+		],
+		items: [item_search_grid]
 	});
 
 	/*
@@ -822,7 +1079,7 @@ Ext.onReady(function() {
 	}
 
 	// Change
-	function Change() {
+	function Change(print) {
 		if(Validate() == true) {
 			Ext.Msg.wait('Changing Order...', 'Please wait');
 			var total = Get_total();
@@ -893,14 +1150,170 @@ Ext.onReady(function() {
 						} else {
 							change = amount_tendered - total;
 						}
-						window_panel.close();
-						grid.getStore().reload();
-						Ext.Msg.show({
-							title: 'Information',
-							msg: '<span class="lead">Change: <strong>' + renderer_currency_no_sign(change) + '</strong></span>',
-							buttons: Ext.Msg.OK,
-							closable: false
-						});
+
+						var change_order = decode.change_order;
+						var change_order_items = decode.change_order_items;
+						var store_information = decode.store_information;
+
+						// Print
+						if(print == true) {
+							Ext.Msg.wait('Creating Change Order Voucher...', 'Please wait');
+
+							// Get Items
+							var items_returned = [],
+							items_replaced = [];
+							Ext.Array.each(change_order_items, function(data) {
+								item_details = {
+									id: data.i_id,
+									name: data.i_name,
+									attribute: data.i_attribute,
+									selling_price: data.cod_selling_price,
+									purchase_price: data.cod_purchase_price,
+									u_slug_name: data.u_slug_name,
+									qty: data.cod_qty,
+									discount: data.cod_discount,
+									subtotal: (parseFloat(data.cod_selling_price) * parseFloat(data.cod_qty)) - (parseFloat(data.cod_discount) * parseFloat(data.cod_qty))
+								};
+								if(data.cod_type == 'O') {
+									items_returned.push(item_details);
+								} else if(data.cod_type == 'N') {
+									items_replaced.push(item_details);
+								}
+							});
+
+							// Items Returned HTML
+							var items_returned_html = '';
+							var items_returned_html_items = ''
+							var items_returned_total = 0;
+							Ext.Array.each(items_returned, function(item_data, index) {
+								items_returned_html_items += '\
+									<tr>\
+										<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.selling_price) + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.subtotal) + '</td>\
+									</tr>\
+								';
+								items_returned_total += item_data.subtotal;
+							});
+
+							// Items Replaced HTML
+							var items_replaced_html = '';
+							var items_replaced_html_items = ''
+							var items_replaced_total = 0;
+							Ext.Array.each(items_replaced, function(item_data, index) {
+								items_replaced_html_items += '\
+									<tr>\
+										<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.selling_price) + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.subtotal) + '</td>\
+									</tr>\
+								';
+								items_replaced_total += item_data.subtotal;
+							});
+
+							// Change Order HTML
+							var change_order_html = '';
+							change_order_html = '\
+								<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
+									<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
+									' + store_information.si_address + '<br>\
+									' + store_information.si_telephone_no + '\
+								</div>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;">\
+											<strong>Change Order</strong><br>\
+											PO #: ' + data.o_order_number + '<br>\
+										</td>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
+											Date: ' + renderer_datetime(change_order.co_date) + '\
+										</td>\
+									</tr>\
+								</table>\
+								<span style="font-size: 12px;"><strong>Items Returned</strong></span>\
+								<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
+									<thead>\
+										<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
+										<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
+										<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Subtotal</td>\
+									</thead>\
+									<tbody>\
+										' + items_returned_html_items + '\
+									</tbody>\
+								</table>\
+								<span style="font-size: 12px;"><strong>Items Replaced</strong></span>\
+								<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
+									<thead>\
+										<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
+										<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
+										<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Subtotal</td>\
+									</thead>\
+									<tbody>\
+										' + items_replaced_html_items + '\
+									</tbody>\
+								</table>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Cash</td>\
+										<td style="width: 15%; border-top: none; text-align: right; padding: 0px;">\
+											' + renderer_currency(change_order.co_amount_tendered) + '\
+										</td>\
+										<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Total</td>\
+										<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
+											' + (total < 0 ? '(' + (renderer_currency(total * -1)) + ')' : renderer_currency(total)) + '\
+										</td>\
+									</tr>\
+									<tr>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Change</td>\
+										<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
+											' + renderer_currency(change) + '\
+										</td>\
+										<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+									</tr>\
+								</table>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Received items in good condition</td>\
+										<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+									</tr>\
+								</table>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Received by:</td>\
+										<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Attended By:</td>\
+									</tr>\
+									<tr>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">___________________</td>\
+										<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
+											' + change_order.attended_name + '<br>___________________\
+										</td>\
+									</tr>\
+								</table>\
+							';
+
+							// Print HTML
+							Print_html(change_order_html);
+							Ext.Msg.close();
+							window_panel.close();
+							grid.getStore().reload();
+						} else {
+							Ext.Msg.close();
+							window_panel.close();
+							grid.getStore().reload();
+						}
 					}
 				}
 			});
@@ -1039,5 +1452,226 @@ Ext.onReady(function() {
                 }
             }
 		});
+	}
+
+	// View
+	function View() {
+		var o_id = '';
+		var selected = grid.getSelectionModel().getSelection();
+		var data = selected[0].getData();
+		o_id = data.o_id
+
+		Ext.Msg.wait('Generating Change Order Preview...', 'Please wait');
+		Ext.Ajax.request({
+			url: global_controller_url + 'get_change_order_items',
+			method: 'POST',
+			params: {
+                o_id: o_id
+            },
+			success: function (response) {
+				var decode = Ext.JSON.decode(response.responseText);
+
+            	if(decode.success == false) {
+                	Ext.Msg.show({
+                		title: 'Failed',
+                		msg: decode.msg,
+                		buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR,
+                        closable: false
+                	});
+                } else {
+                	var change_order = decode.change_order;
+					var change_order_items = decode.change_order_items;
+					var store_information = decode.store_information;
+
+                	// Get Items
+					var items_returned = [],
+					items_replaced = [];
+					Ext.Array.each(change_order_items, function(data) {
+						item_details = {
+							id: data.i_id,
+							name: data.i_name,
+							attribute: data.i_attribute,
+							selling_price: data.cod_selling_price,
+							purchase_price: data.cod_purchase_price,
+							u_slug_name: data.u_slug_name,
+							qty: data.cod_qty,
+							discount: data.cod_discount,
+							subtotal: (parseFloat(data.cod_selling_price) * parseFloat(data.cod_qty)) - (parseFloat(data.cod_discount) * parseFloat(data.cod_qty))
+						};
+						if(data.cod_type == 'O') {
+							items_returned.push(item_details);
+						} else if(data.cod_type == 'N') {
+							items_replaced.push(item_details);
+						}
+					});
+
+					// Items Returned HTML
+					var items_returned_html = '';
+					var items_returned_html_items = ''
+					var items_returned_total = 0;
+					Ext.Array.each(items_returned, function(item_data, index) {
+						items_returned_html_items += '\
+							<tr>\
+								<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+								<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.selling_price) + '</td>\
+								<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.subtotal) + '</td>\
+							</tr>\
+						';
+						items_returned_total += item_data.subtotal;
+					});
+
+					// Items Replaced HTML
+					var items_replaced_html = '';
+					var items_replaced_html_items = ''
+					var items_replaced_total = 0;
+					Ext.Array.each(items_replaced, function(item_data, index) {
+						items_replaced_html_items += '\
+							<tr>\
+								<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+								<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.selling_price) + '</td>\
+								<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.subtotal) + '</td>\
+							</tr>\
+						';
+						items_replaced_total += item_data.subtotal;
+					});
+
+					// Set Change
+					var change = 0;
+					if(change_order.co_amount_total < 0) {
+						change = change_order.co_amount_total * -1;
+					} else {
+						change = change_order.co_amount_tendered - change_order.co_amount_total;
+					}
+
+					// Initialize Tab Items
+					var tab_items = [];
+
+					// Change Order HTML
+					var change_order_html = '';
+					change_order_html = '\
+						<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
+							<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
+							' + store_information.si_address + '<br>\
+							' + store_information.si_telephone_no + '\
+						</div>\
+						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+							<tr>\
+								<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;">\
+									<strong>Change Order</strong><br>\
+									PO #: ' + data.o_order_number + '<br>\
+								</td>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
+									Date: ' + renderer_datetime(change_order.co_date) + '\
+								</td>\
+							</tr>\
+						</table>\
+						<span style="font-size: 12px;"><strong>Items Returned</strong></span>\
+						<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
+							<thead>\
+								<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
+								<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
+								<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
+								<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
+								<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Subtotal</td>\
+							</thead>\
+							<tbody>\
+								' + items_returned_html_items + '\
+							</tbody>\
+						</table>\
+						<span style="font-size: 12px;"><strong>Items Replaced</strong></span>\
+						<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
+							<thead>\
+								<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
+								<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
+								<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
+								<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
+								<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Subtotal</td>\
+							</thead>\
+							<tbody>\
+								' + items_replaced_html_items + '\
+							</tbody>\
+						</table>\
+						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+							<tr>\
+								<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Cash</td>\
+								<td style="width: 15%; border-top: none; text-align: right; padding: 0px;">\
+									' + renderer_currency(change_order.co_amount_tendered) + '\
+								</td>\
+								<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+								<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Total</td>\
+								<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
+									' + (change_order.co_amount_total < 0 ? '(' + (renderer_currency(change_order.co_amount_total * -1)) + ')' : renderer_currency(change_order.co_amount_total)) + '\
+								</td>\
+							</tr>\
+							<tr>\
+								<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Change</td>\
+								<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
+									' + renderer_currency(change) + '\
+								</td>\
+								<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+								<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+								<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+							</tr>\
+						</table>\
+						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+							<tr>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Received items in good condition</td>\
+								<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+							</tr>\
+						</table>\
+						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+							<tr>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Received by:</td>\
+								<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">Attended By:</td>\
+							</tr>\
+							<tr>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">___________________</td>\
+								<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
+									' + change_order.attended_name + '<br>___________________\
+								</td>\
+							</tr>\
+						</table>\
+					';
+					tab_items.push({
+						title: 'Change Order Items',
+						id: 'change_order_tab',
+            			html: change_order_html,
+            			bodyPadding: 5,
+            			autoScroll: true
+					});
+
+					// Reset View Order Window
+					view_change_order_tab_panel.removeAll();
+					view_change_order_tab_panel.add(tab_items);
+					view_change_order_tab_panel.setActiveTab(0);
+					Ext.Msg.close();
+					view_change_order_window_panel.setTitle('View Change Order of PO# ' + data.o_order_number);
+					view_change_order_window_panel.restore();
+					view_change_order_window_panel.show();
+					view_change_order_window_panel.center();
+                }
+			}
+		});
+	}
+
+	// Print Contents
+	function Print_contents() {
+		Print_element(Ext.getCmp('change_order_tab'));
+	}
+
+	// Item Search
+	function Item_search() {
+		Ext.getCmp('frm_item_search').reset();
+		item_search_grid.getStore().removeAll();
+		item_search_window_panel.show();
+		item_search_window_panel.center();
+		Ext.getCmp('frm_item_search').focus();
 	}
 });

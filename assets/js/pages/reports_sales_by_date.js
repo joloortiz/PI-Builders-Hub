@@ -19,6 +19,15 @@ Ext.onReady(function() {
 	    	beforeload: function(store) {
 		    	store.getProxy().extraParams.datefrom = Ext.getCmp('frm_datefrom').getValue();
 		    	store.getProxy().extraParams.dateto = Ext.getCmp('frm_dateto').getValue();
+		    },
+		    load: function(store, records) {
+		    	var total_sales = 0;
+
+				Ext.Array.each(records, function(rec, index) {
+					var data = rec.getData();
+					total_sales += parseFloat(data.sales);
+				});
+				Ext.getCmp('text_total_sales').setText(renderer_currency_no_sign(total_sales));
 		    }
 	    }
 	});
@@ -105,6 +114,21 @@ Ext.onReady(function() {
         }
 	];
 
+	// Set Bottom Bar
+	var bottom_bar = [
+		{
+			xtype: 'text',
+			text: 'Total Sales:',
+			cls: 'lead'
+		},
+		{
+			xtype: 'text',
+			id: 'text_total_sales',
+			cls: 'lead extjs-bold-text',
+			width: '40%'
+		}
+	];
+
 	// Set Grid
 	var grid = new Ext.grid.Panel({
 	    renderTo: 'grid-container',
@@ -115,6 +139,7 @@ Ext.onReady(function() {
 	    columnLines: true,
 	    iconCls: 'extjs-icon-time',
 	    tbar: top_bar,
+	    bbar: bottom_bar,
 	    columns: [
 	        {
 	            text: 'Date',

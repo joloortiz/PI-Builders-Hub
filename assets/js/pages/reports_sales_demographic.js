@@ -29,7 +29,7 @@ Ext.onReady(function() {
 	    			store.getProxy().extraParams.sales_time = Ext.getCmp('frm_sel_sales_time').getValue();
 	    		}
 		    },
-		    load: function() {
+		    load: function(store, records) {
 		    	var sales_time = Ext.getCmp('frm_sel_sales_time').getValue();
 
 		    	if(sales_time == 'today') {
@@ -46,6 +46,14 @@ Ext.onReady(function() {
 
 		    	chart.redraw();
 		    	chart.setLoading(false);
+
+		    	var total_sales = 0;
+
+				Ext.Array.each(records, function(rec, index) {
+					var data = rec.getData();
+					total_sales += parseFloat(data.sales);
+				});
+				Ext.getCmp('text_total_sales').setText(renderer_currency_no_sign(total_sales));
 		    }
 	    }
 	});
@@ -190,6 +198,21 @@ Ext.onReady(function() {
         }
 	];
 
+	// Set Bottom Bar
+	var bottom_bar = [
+		{
+			xtype: 'text',
+			text: 'Total Sales:',
+			cls: 'lead'
+		},
+		{
+			xtype: 'text',
+			id: 'text_total_sales',
+			cls: 'lead extjs-bold-text',
+			width: '40%'
+		}
+	];
+
 	// Set Chart
 	var chart = new Ext.chart.Chart({
 		store: store,
@@ -264,6 +287,7 @@ Ext.onReady(function() {
 		layout: 'fit',
 		iconCls: 'extjs-icon-chart',
 		tbar: top_bar,
+		bbar: bottom_bar,
 		items: chart
 	});
 

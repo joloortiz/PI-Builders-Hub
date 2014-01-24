@@ -27,8 +27,12 @@ class Inventory_monitor extends MY_Controller {
 
 		try {
 			// Get Data
-			$data['data'] = $this->items_model->get_items($query, $start, $limit, false, $c_id, $s_id, $order_qty_on_hand);
-			
+			$items = $this->items_model->get_items($query, $start, $limit, false, $c_id, $s_id, $order_qty_on_hand);
+			foreach($items as $k => $v) {
+				$items[$k]['i_name'] = stripslashes($items[$k]['i_name']);
+			}
+			$data['data'] = $items;
+
 			// Get Total
 			$data['total'] = count($this->items_model->get_items($query, '', '', false, $c_id, $s_id, $order_qty_on_hand));
 

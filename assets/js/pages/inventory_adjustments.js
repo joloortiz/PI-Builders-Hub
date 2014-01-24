@@ -145,6 +145,27 @@ Ext.onReady(function() {
 				}
 			}
 		},
+		'-',
+		{
+			xtype: 'button',
+			text: 'View Adjustment',
+			id: 'btn_view',
+			iconCls: 'extjs-icon-view',
+			iconAlign: 'left',
+			handler: function() {
+				if(grid.getSelectionModel().hasSelection()) {
+					View();
+				} else {
+					Ext.Msg.show({
+						title:'Information',
+						msg: 'Please a record first',
+						buttons: Ext.Msg.OK,
+						icon: Ext.Msg.WARNING,
+						closable: false
+					});
+				}
+			}
+		},
 		'->',
 		{
             xtype: 'combobox',
@@ -569,6 +590,14 @@ Ext.onReady(function() {
 	    	}
 	    ]
     });
+
+	// Set Tab Panel
+	var view_adjustment_tab_panel = new Ext.tab.Panel({
+		width: '100%',
+		activeTab: 0,
+		plain: true,
+		deferredRender: false
+	});
 	
 	// Set Window panel
 	var window_panel = new Ext.window.Window({
@@ -631,6 +660,42 @@ Ext.onReady(function() {
 		closable: false,
 		resizable: false,
 		items: [qty_form_panel]
+	});
+
+	var view_adjustment_window_panel = new Ext.window.Window({
+		height: 500,
+		width: 750,
+		bodyPadding: 5,
+		iconCls: 'extjs-icon-view',
+		layout: 'fit',
+		closeAction: 'hide',
+		modal: true,
+		resizable: false,
+		closable: false,
+		maximizable: true,
+		items: [view_adjustment_tab_panel],
+		bbar: [
+			{
+				xtype: 'button',
+				text: 'Close',
+				iconCls: 'extjs-icon-cancel-large',
+				scale: 'large',
+				handler: function() {
+					view_adjustment_window_panel.close();
+				}
+			},
+			'->',
+			{
+				xtype: 'button',
+				id: 'btn_print',
+				text: 'Print',
+				iconCls: 'extjs-icon-print-large',
+				scale: 'large',
+				handler: function() {
+					Print_contents()
+				}
+			}
+		]
 	});
 
 	var item_search_window_panel = new Ext.window.Window({
@@ -841,27 +906,26 @@ Ext.onReady(function() {
 										Ext.Array.each(items, function(item_data, index) {
 											adjust_html_items += '\
 												<tr>\
-													<td style="padding: 3px;">' + renderer_positive_negative_number_no_design(item_data.qty) + '</td>\
-													<td style="padding: 3px;">' + item_data.u_slug_name + '</td>\
-													<td style="padding: 3px;">' + item_data.name + (item_data.attribute != '' ? '-' + item_data.attribute : '') + '</td>\
+													<td style="padding: 0px; line-height: 15px;">' + (renderer_number(item_data.qty) > 0 ? renderer_number(item_data.qty) : '(' + renderer_number(item_data.qty) + ')') + '</td>\
+													<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+													<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
 												</tr>\
 											';
 											adjust_total_cost += item_data.cost;
 										});
 										adjust_html = '\
-											<div class="extjs-align-center">\
-												' + store_information.si_name + '<br>\
+											<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
+												<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
 												' + store_information.si_address + '<br>\
 												' + store_information.si_telephone_no + '\
 											</div>\
-											<br>\
-											<table class="table" style="margin-bottom: 0; font-size: 13px;">\
+											<table class="table" style="margin-bottom: 0; font-size: 12px;">\
 												<tr>\
-													<td style="width: 60%; border-top: none; padding: 3px;">\
-														<strong>Adjustment Voucher #:</strong> ' + adjust.a_adjustment_number + '<br>\
+													<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;">\
+														Adjustment Voucher #: ' + adjust.a_adjustment_number + '<br>\
 														Date: ' + renderer_datetime(adjust.a_date) + '\
 													</td>\
-													<td style="width: 40%; border-top: none; padding: 3px;">\
+													<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
 														Adjusted by: ' + adjust.adjusted_name + '\
 													</td>\
 												</tr>\
@@ -874,14 +938,7 @@ Ext.onReady(function() {
 												</thead>\
 												<tbody>\
 													' + adjust_html_items + '\
-											</table>\
-											<table class="table" style="margin-bottom: 0; font-size: 13px;">\
-												<tr>\
-													<td style="width: 50%; border-top: none; padding: 3px;"></td>\
-													<td style="width: 50%; border-top: none; padding: 3px;">\
-														<strong>Checked & Received by:</strong>\
-													</td>\
-												</tr>\
+												</tbody>\
 											</table>\
 										';
 
@@ -997,6 +1054,121 @@ Ext.onReady(function() {
                 }
             }
 		});
+	}
+
+	// View
+	function View() {
+		var a_id = '';
+		var selected = grid.getSelectionModel().getSelection();
+		var data = selected[0].getData();
+		a_id = data.a_id
+
+		Ext.Msg.wait('Generating Adjustment Preview...', 'Please wait');
+		Ext.Ajax.request({
+			url: global_controller_url + 'get_adjustment_items',
+			method: 'POST',
+			params: {
+                a_id: a_id
+            },
+			success: function (response) {
+				var decode = Ext.JSON.decode(response.responseText);
+
+            	if(decode.success == false) {
+                	Ext.Msg.show({
+                		title: 'Failed',
+                		msg: decode.msg,
+                		buttons: Ext.Msg.OK,
+                        icon: Ext.MessageBox.ERROR,
+                        closable: false
+                	});
+                } else {
+					var adjustment_items = decode.adjustment_items;
+					var store_information = decode.store_information;
+
+                	// Get Items from rows
+					var all_items = new Array();
+					Ext.Array.each(adjustment_items, function(data) {
+						item_details = {
+							id: data.i_id,
+							name: data.i_name,
+							attribute: data.i_attribute,
+							u_slug_name: data.u_slug_name,
+							qty: data.ad_qty
+						};
+
+						all_items.push(item_details);
+					});
+
+					// Initialize Tab Items
+					var tab_items = [];
+
+					// All Items HTML
+					var adjustment_html = '';
+					var adjustment_html_items = ''
+					var adjustment_total_cost = 0;
+					Ext.Array.each(all_items, function(item_data, index) {
+						adjustment_html_items += '\
+							<tr>\
+								<td style="padding: 0px; line-height: 15px;">' + (renderer_number(item_data.qty) > 0 ? renderer_number(item_data.qty) : '(' + renderer_number(item_data.qty) + ')') + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+								<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+							</tr>\
+						';
+						adjustment_total_cost += item_data.cost;
+					});
+					adjustment_html = '\
+						<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
+							<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
+							' + store_information.si_address + '<br>\
+							' + store_information.si_telephone_no + '\
+						</div>\
+						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+							<tr>\
+								<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;">\
+									Adjustment Voucher #: ' + data.a_adjustment_number + '<br>\
+									Date: ' + renderer_datetime(data.a_date) + '\
+								</td>\
+								<td style="width: 30%; border-top: none; padding: 0px; line-height: 15px;">\
+									Adjusted by: ' + data.adjusted_name + '\
+								</td>\
+							</tr>\
+						</table>\
+						<table class="table table-bordered" style="margin-bottom: 0; font-size: 13px;">\
+							<thead>\
+								<th style="width: 15%; padding: 3px;">Qty</th>\
+								<th style="width: 15%; padding: 3px;">Unit</th>\
+								<th style="width: 70%; padding: 3px;">Item</th>\
+							</thead>\
+							<tbody>\
+								' + adjustment_html_items + '\
+							</tbody>\
+						</table>\
+					';
+					tab_items.push({
+						title: 'Adjustment Items',
+						id: 'adjustments_tab',
+            			html: adjustment_html,
+            			bodyPadding: 5,
+            			autoScroll: true
+					});
+
+					// Reset View Order Window
+					view_adjustment_tab_panel.removeAll();
+					view_adjustment_tab_panel.add(tab_items);
+					view_adjustment_tab_panel.setActiveTab(0);
+					Ext.Msg.close();
+					view_adjustment_window_panel.setTitle('View Adjustment # ' + data.a_adjustment_number);
+					view_adjustment_window_panel.restore();
+					view_adjustment_window_panel.show();
+					view_adjustment_window_panel.center();
+                }
+			}
+		});
+	}
+
+	// Print Contents
+	function Print_contents() {
+		Print_element(Ext.getCmp('adjustments_tab'));
 	}
 
 	// Item Search

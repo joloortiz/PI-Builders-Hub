@@ -1436,94 +1436,75 @@ Ext.onReady(function() {
 						});
 					} else {
 						var receiving = decode.receiving;
+						var store_information = decode.store_information;
 
 						// Print
 						if(print == true) {
-							Ext.Msg.wait('Initializing...', 'Please wait');
+							Ext.Msg.wait('Creating Receiving Voucher...', 'Please wait');
 
-							Ext.Ajax.request({
-								url: global_controller_url + 'get_store_information',
-								method: 'POST',
-								success: function (response) {
-									var decode = Ext.JSON.decode(response.responseText);
-
-									if(decode.success == false) {
-										Ext.Msg.show({
-											title: 'Failed',
-											msg: decode.msg,
-											buttons: Ext.Msg.OK,
-											icon: Ext.MessageBox.ERROR,
-											closable: false
-										});
-									} else {
-										var store_information = decode.data;
-										Ext.Msg.wait('Creating Receiving Voucher...', 'Please wait');
-
-										// All Items HTML
-										var receiving_html = '';
-										var receiving_html_items = ''
-										var receiving_total_cost = 0;
-										Ext.Array.each(items, function(item_data, index) {
-											receiving_html_items += '\
-												<tr>\
-													<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
-													<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
-													<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
-													<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.purchase_price) + '</td>\
-													<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.cost) + '</td>\
-												</tr>\
-											';
-											receiving_total_cost += item_data.cost;
-										});
-										receiving_html = '\
-											<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
-												<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
-												' + store_information.si_address + '<br>\
-												' + store_information.si_telephone_no + '\
-											</div>\
-											<table class="table" style="margin-bottom: 0; font-size: 12px;">\
-												<tr>\
-													<td style="width: 60%; border-top: none; padding: 0px; line-height: 15px;">\
-														Receiving Voucher #: ' + receiving.r_receiving_number + '<br>\
-														Date: ' + renderer_datetime(receiving.r_date) + '\
-													</td>\
-													<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;">\
-														Received by: ' + receiving.received_name + '<br>\
-														PO #: ' + (receiving.po_purchase_order_number != null ? receiving.po_purchase_order_number : '') + '\
-													</td>\
-												</tr>\
-											</table>\
-											<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
-												<thead>\
-													<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
-													<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
-													<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
-													<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
-													<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Cost</td>\
-												</thead>\
-												<tbody>\
-													' + receiving_html_items + '\
-											</table>\
-											<table class="table" style="margin-bottom: 0; font-size: 12px;">\
-												<tr>\
-													<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;"></td>\
-													<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Total Cost</td>\
-													<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
-														' + renderer_currency(receiving_total_cost) + '\
-													</td>\
-												</tr>\
-											</table>\
-										';
-
-										// Print HTML
-										Print_html(receiving_html);
-										Cancel_receive_from_PO();
-										Ext.Msg.close();
-										window_panel.close();
-										grid.getStore().reload();
-									}
-								}
+							// All Items HTML
+							var receiving_html = '';
+							var receiving_html_items = ''
+							var receiving_total_cost = 0;
+							Ext.Array.each(items, function(item_data, index) {
+								receiving_html_items += '\
+									<tr>\
+										<td style="padding: 0px; line-height: 15px;">' + renderer_number(item_data.qty) + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.u_slug_name + '</td>\
+										<td style="padding: 0px; line-height: 15px;">' + item_data.name + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.purchase_price) + '</td>\
+										<td style="text-align: right; padding: 0px; line-height: 15px;">' + renderer_currency_no_sign(item_data.cost) + '</td>\
+									</tr>\
+								';
+								receiving_total_cost += item_data.cost;
 							});
+							receiving_html = '\
+								<div style="font-size: 12px; line-height: 15px; margin-top: 10px; text-align: center;">\
+									<span style="font-size: 13px;"><strong>' + store_information.si_name + '</strong></span><br>\
+									' + store_information.si_address + '<br>\
+									' + store_information.si_telephone_no + '\
+								</div>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 60%; border-top: none; padding: 0px; line-height: 15px;">\
+											Receiving Voucher #: ' + receiving.r_receiving_number + '<br>\
+											Date: ' + renderer_datetime(receiving.r_date) + '\
+										</td>\
+										<td style="width: 40%; border-top: none; padding: 0px; line-height: 15px;">\
+											Received by: ' + receiving.received_name + '<br>\
+											PO #: ' + (receiving.po_purchase_order_number != null ? receiving.po_purchase_order_number : '') + '\
+										</td>\
+									</tr>\
+								</table>\
+								<table class="table table-bordered" style="margin-bottom: 0; font-size: 12px;">\
+									<thead>\
+										<td style="width: 7%; padding: 0px; text-align: center; line-height: 15px;">Qty</td>\
+										<td style="width: 10%; padding: 0px; text-align: center; line-height: 15px;">Unit</td>\
+										<td style="width: 53%; padding: 0px; text-align: center; line-height: 15px;">Item</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Price</td>\
+										<td style="width: 15%; padding: 0px; text-align: center; line-height: 15px;">Cost</td>\
+									</thead>\
+									<tbody>\
+										' + receiving_html_items + '\
+									</tbody>\
+								</table>\
+								<table class="table" style="margin-bottom: 0; font-size: 12px;">\
+									<tr>\
+										<td style="width: 70%; border-top: none; padding: 0px; line-height: 15px;"></td>\
+										<td style="width: 15%; border-top: none; padding: 0px; line-height: 15px;">Total Cost</td>\
+										<td style="width: 15%; border-top: none; text-align: right; padding: 0px; line-height: 15px;">\
+											' + renderer_currency(receiving_total_cost) + '\
+										</td>\
+									</tr>\
+								</table>\
+							';
+
+							// Print HTML
+							Print_html(receiving_html);
+							Cancel_receive_from_PO();
+							Ext.Msg.close();
+							window_panel.close();
+							grid.getStore().reload();
 						} else {
 							Cancel_receive_from_PO();
 							Ext.Msg.close();
@@ -1869,6 +1850,7 @@ Ext.onReady(function() {
 							</thead>\
 							<tbody>\
 								' + receiving_html_items + '\
+							</tbody>\
 						</table>\
 						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
 							<tr>\

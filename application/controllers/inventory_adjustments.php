@@ -126,6 +126,28 @@ class Inventory_adjustments extends MY_Controller {
 		echo json_encode($data);
 	}
 
+	# Get Adjustment Items
+	function get_adjustment_items() {
+		$a_id = $this->input->post('a_id');
+
+		try {
+			// Get Adjustment Items
+			$adjustment_items = $this->inventory_model->get_adjustment_items_by_adjustment_id($a_id);
+			$data['adjustment_items'] = $adjustment_items;
+
+			// Get Store Information
+			$store_information = $this->store_information_model->get_store_information();
+			$data['store_information'] = $store_information[0];
+			
+			$data['success'] = true;
+		} catch(Exception $e) {
+			$data['success'] = false;
+			$data['msg'] = $e->getMessage();
+		}
+
+		echo json_encode($data);
+	}
+
 	# Save
 	function save() {
 		$items = json_decode($this->input->post('items'));

@@ -61,7 +61,7 @@ Ext.onReady(function() {
 	    listeners: {
 	    	load: function() {
 	    		Ext.getCmp('frm_sel_supplier').setValue('all');
-	    		store.reload();
+	    		// store.reload();
 	    	}
 	    }
 	});
@@ -142,13 +142,13 @@ Ext.onReady(function() {
 			            triggerAction: 'all',
 			            queryMode: 'local',
 			            emptyText: 'Select Category',
-			            width: 200,
+			            width: '30%',
 			            labelWidth: 60,
 			            forceSelection: true,
 			            value: 'All',
 			            listeners: {
 			            	select: function() {
-			            		store.reload();
+			            		// store.reload();
 			            	}
 			            }
 			        },
@@ -159,7 +159,7 @@ Ext.onReady(function() {
 			            id: 'frm_sel_supplier',
 			            name: 'frm_sel_supplier',
 			            store: supplier_store,
-			            width: 200,
+			            width: '30%',
 			            labelWidth: 50,
 			            valueField: 's_id',
 			            displayField: 's_name',
@@ -169,7 +169,7 @@ Ext.onReady(function() {
 			            forceSelection: true,
 			            listeners: {
 			            	select: function() {
-			            		store.reload();
+			            		// store.reload();
 			            	}
 			            }
 			        },
@@ -191,7 +191,7 @@ Ext.onReady(function() {
 			            value: 'asc',
 						listeners: {
 							select: function() {
-			            		store.reload();
+			            		// store.reload();
 			            	}
 						}
 			        }

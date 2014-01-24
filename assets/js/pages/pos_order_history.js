@@ -439,6 +439,7 @@ Ext.onReady(function() {
 							</thead>\
 							<tbody>\
 								' + all_items_html_items + '\
+							</tbody>\
 						</table>\
 						<table class="table" style="margin-bottom: 0; font-size: 12px;">\
 							<tr>\
